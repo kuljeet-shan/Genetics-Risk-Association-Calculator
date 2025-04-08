@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Forest Plot Maker</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .form-control, .form-select {
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        #plot {
+            width: 100%;
+            height: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .settings-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .example-data {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .tab-content {
+            padding: 15px 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .settings-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            #plot {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tree"></i> Advanced Forest Plot Visualizer</h1>
+            <p class="lead">Create publication-ready forest plots with customizable settings</p>
+        </div>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab">Data Input</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">Plot Settings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="export-tab" data-bs-toggle="tab" data-bs-target="#export" type="button" role="tab">Export</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="data" role="tabpanel">
+                <div class="card">
+                    <h3 class="card-title"><i class="fas fa-table"></i> Data Input</h3>
+                    <div class="mb-3">
+                        <label for="dataInput" class="form-label">Paste your data (tab or comma separated):</label>
+                        <textarea class="form-control" id="dataInput" rows="5" placeholder="Study 1    0.5    0.3    0.7
+Study 2    0.8    0.6    1.0
+Study 3    1.2    0.9    1.5"></textarea>
+                        <div class="example-data">
+                            Example format: Study Name [tab] Effect Size [tab] CI Lower [tab] CI Upper<br>
+                            You can copy directly from Excel or other spreadsheet software
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="parseData()">
+                            <i class="fas fa-check"></i> Parse Data
+                        </button>
+                        <button class="btn btn-success" onclick="createForestPlot()">
+                            <i class="fas fa-chart-line"></i> Generate Plot
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadExampleData()">
+                            <i class="fas fa-lightbulb"></i> Load Example
+                        </button>
+                        <button class="btn btn-danger" onclick="clearData()">
+                            <i class="fas fa-trash"></i> Clear Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="card">
+                    <h3 class="card-title"><i class="fas fa-sliders-h"></i> Plot Customization</h3>
+                    
+                    <div class="settings-group">
+                        <div class="setting-item">
+                            <label for="plot-title" class="form-label">Plot Title</label>
+                            <input type="text" class="form-control" id="plot-title" value="Forest Plot">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="xaxis-title" class="form-label">X-Axis Title</label>
+                            <input type="text" class="form-control" id="xaxis-title" value="Effect Size">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="yaxis-title" class="form-label">Y-Axis Title</label>
+                            <input type="text" class="form-control" id="yaxis-title" value="Study">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <div class="setting-item">
+                            <label for="font-size" class="form-label">Font Size</label>
+                            <input type="number" class="form-control" id="font-size" value="14" min="8" max="30">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="font-style" class="form-label">Font Family</label>
+                            <select class="form-select" id="font-style">
+                                <option value="Arial">Arial</option>
+                                <option value="Calibri">Calibri</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Verdana">Verdana</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="marker-size" class="form-label">Marker Size</label>
+                            <input type="number" class="form-control" id="marker-size" value="10" min="5" max="20">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <div class="setting-item">
+                            <label for="line-color" class="form-label">Reference Line Color</label>
+                            <div class="d-flex align-items-center">
+                                <input type="color" class="form-control form-control-color" id="line-color" value="#ff0000">
+                                <span class="color-preview" id="line-color-preview" style="background-color: #ff0000;"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="effect-color" class="form-label">Effect Marker Color</label>
+                            <div class="d-flex align-items-center">
+                                <input type="color" class="form-control form-control-color" id="effect-color" value="#1f77b4">
+                                <span class="color-preview" id="effect-color-preview" style="background-color: #1f77b4;"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="ci-color" class="form-label">CI Line Color</label>
+                            <div class="d-flex align-items-center">
+                                <input type="color" class="form-control form-control-color" id="ci-color" value="#666666">
+                                <span class="color-preview" id="ci-color-preview" style="background-color: #666666;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <div class="setting-item">
+                            <label for="reference-value" class="form-label">Reference Value</label>
+                            <input type="number" class="form-control" id="reference-value" value="1" step="0.1">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="line-style" class="form-label">Reference Line Style</label>
+                            <select class="form-select" id="line-style">
+                                <option value="solid">Solid</option>
+                                <option value="dash">Dashed</option>
+                                <option value="dot">Dotted</option>
+                                <option value="dashdot">Dash-Dot</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="line-width" class="form-label">Line Width</label>
+                            <input type="number" class="form-control" id="line-width" value="2" min="1" max="5">
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="applySettings()">
+                            <i class="fas fa-sync-alt"></i> Apply Settings
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetSettings()">
+                            <i class="fas fa-undo"></i> Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="export" role="tabpanel">
+                <div class="card">
+                    <h3 class="card-title"><i class="fas fa-download"></i> Export Options</h3>
+                    
+                    <div class="settings-group">
+                        <div class="setting-item">
+                            <label for="export-width" class="form-label">Image Width (px)</label>
+                            <input type="number" class="form-control" id="export-width" value="1600" min="800" max="4000">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="export-height" class="form-label">Image Height (px)</label>
+                            <input type="number" class="form-control" id="export-height" value="900" min="600" max="3000">
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="export-scale" class="form-label">Scale Factor</label>
+                            <input type="number" class="form-control" id="export-scale" value="2" min="1" max="5" step="0.5">
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="downloadImage('png')">
+                            <i class="fas fa-file-image"></i> Download PNG
+                        </button>
+                        <button class="btn btn-primary" onclick="downloadImage('jpeg')">
+                            <i class="fas fa-file-image"></i> Download JPEG
+                        </button>
+                        <button class="btn btn-primary" onclick="downloadImage('pdf')">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </button>
+                        <button class="btn btn-primary" onclick="downloadImage('svg')">
+                            <i class="fas fa-file-code"></i> Download SVG
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="plot"></div>
+        
+        <div class="card">
+            <h3 class="card-title"><i class="fas fa-info-circle"></i> Plot Information</h3>
+            <div id="plot-info">
+                <p>No plot generated yet. Please input your data and click "Generate Plot".</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let studyNames = [];
+        let effectSizes = [];
+        let ciLowers = [];
+        let ciUppers = [];
+        let currentPlot = null;
+
+        // Initialize color preview updates
+        document.getElementById('line-color').addEventListener('input', function() {
+            document.getElementById('line-color-preview').style.backgroundColor = this.value;
+        });
+        
+        document.getElementById('effect-color').addEventListener('input', function() {
+            document.getElementById('effect-color-preview').style.backgroundColor = this.value;
+        });
+        
+        document.getElementById('ci-color').addEventListener('input', function() {
+            document.getElementById('ci-color-preview').style.backgroundColor = this.value;
+        });
+
+        // Function to parse pasted data
+        function parseData() {
+            const dataInput = document.getElementById('dataInput').value.trim();
+            const rows = dataInput.split('\n');
+
+            studyNames = [];
+            effectSizes = [];
+            ciLowers = [];
+            ciUppers = [];
+
+            let parseErrors = [];
+            
+            rows.forEach((row, index) => {
+                // Handle both tab and comma separated values
+                const columns = row.split(/\t|,/).map(col => col.trim());
+                
+                if (columns.length >= 4) {
+                    const [name, effect, ciLower, ciUpper] = columns;
+                    
+                    // Validate numeric values
+                    if (isNaN(effect)) parseErrors.push(`Row ${index+1}: Invalid effect size '${effect}'`);
+                    if (isNaN(ciLower)) parseErrors.push(`Row ${index+1}: Invalid lower CI '${ciLower}'`);
+                    if (isNaN(ciUpper)) parseErrors.push(`Row ${index+1}: Invalid upper CI '${ciUpper}'`);
+                    
+                    studyNames.push(name);
+                    effectSizes.push(parseFloat(effect));
+                    ciLowers.push(parseFloat(ciLower));
+                    ciUppers.push(parseFloat(ciUpper));
+                } else if (row.trim() !== '') {
+                    parseErrors.push(`Row ${index+1}: Expected 4 columns but found ${columns.length}`);
+                }
+            });
+
+            if (parseErrors.length > 0) {
+                alert("Data parsing errors:\n" + parseErrors.join("\n"));
+            }
+            
+            if (studyNames.length > 0) {
+                updatePlotInfo(`Successfully parsed ${studyNames.length} studies. Click "Generate Plot" to visualize.`);
+            } else {
+                updatePlotInfo("No valid data found. Please check your input format.");
+            }
+        }
+
+        // Function to create the forest plot
+        function createForestPlot() {
+            if (studyNames.length === 0 || effectSizes.length === 0 || ciLowers.length === 0 || ciUppers.length === 0) {
+                alert("Please parse valid data first by clicking on 'Parse Data'.");
+                return;
+            }
+
+            applySettings();
+        }
+        
+        // Apply current settings to the plot
+        function applySettings() {
+            const fontSize = parseInt(document.getElementById('font-size').value);
+            const fontStyle = document.getElementById('font-style').value;
+            const lineColor = document.getElementById('line-color').value;
+            const effectColor = document.getElementById('effect-color').value;
+            const ciColor = document.getElementById('ci-color').value;
+            const markerSize = parseInt(document.getElementById('marker-size').value);
+            const referenceValue = parseFloat(document.getElementById('reference-value').value);
+            const lineStyle = document.getElementById('line-style').value;
+            const lineWidth = parseInt(document.getElementById('line-width').value);
+            const plotTitle = document.getElementById('plot-title').value;
+            const xAxisTitle = document.getElementById('xaxis-title').value;
+            const yAxisTitle = document.getElementById('yaxis-title').value;
+
+            // Generate colors for each study based on effect color
+            const colors = effectSizes.map(() => effectColor);
+
+            const data = [{
+                x: effectSizes,
+                y: studyNames,
+                error_x: {
+                    type: 'data',
+                    symmetric: false,
+                    array: ciUppers.map((upper, i) => upper - effectSizes[i]),
+                    arrayminus: effectSizes.map((effect, i) => effect - ciLowers[i]),
+                    color: ciColor,
+                    thickness: 1.5,
+                    width: markerSize / 2
+                },
+                mode: 'markers',
+                marker: {
+                    color: colors,
+                    size: markerSize,
+                    line: {
+                        color: 'white',
+                        width: 1
+                    }
+                },
+                type: 'scatter',
+                name: 'Effect Size'
+            }];
+
+            const layout = {
+                title: {
+                    text: plotTitle,
+                    font: {
+                        size: fontSize + 2,
+                        family: fontStyle
+                    }
+                },
+                xaxis: {
+                    title: {
+                        text: xAxisTitle,
+                        standoff: 15,
+                        font: {
+                            size: fontSize,
+                            family: fontStyle
+                        }
+                    },
+                    zeroline: false,
+                    showline: true,
+                    showgrid: false,
+                    tickfont: {
+                        size: fontSize - 2,
+                        family: fontStyle
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: yAxisTitle,
+                        standoff: 15,
+                        font: {
+                            size: fontSize,
+                            family: fontStyle
+                        }
+                    },
+                    autorange: 'reversed',
+                    showgrid: false,
+                    tickfont: {
+                        size: fontSize - 2,
+                        family: fontStyle
+                    }
+                },
+                shapes: [
+                    {
+                        type: 'line',
+                        x0: referenceValue,
+                        y0: -0.5,
+                        x1: referenceValue,
+                        y1: studyNames.length - 0.5,
+                        line: {
+                            color: lineColor,
+                            width: lineWidth,
+                            dash: lineStyle
+                        }
+                    }
+                ],
+                plot_bgcolor: "#ffffff",
+                paper_bgcolor: "#ffffff",
+                margin: {
+                    l: 150,
+                    r: 30,
+                    t: 50,
+                    b: 60
+                },
+                legend: {
+                    font: {
+                        size: fontSize - 2,
+                        family: fontStyle
+                    }
+                }
+            };
+
+            // Render or update the plot
+            if (currentPlot) {
+                Plotly.react('plot', data, layout);
+            } else {
+                currentPlot = Plotly.newPlot('plot', data, layout);
+            }
+            
+            updatePlotInfo(`Displaying forest plot with ${studyNames.length} studies. Effect sizes range from ${Math.min(...effectSizes).toFixed(2)} to ${Math.max(...effectSizes).toFixed(2)}.`);
+        }
+
+        // Function to download the plot as an image
+        function downloadImage(format) {
+            if (!currentPlot) {
+                alert("Please generate a plot first before exporting.");
+                return;
+            }
+
+            const width = parseInt(document.getElementById('export-width').value);
+            const height = parseInt(document.getElementById('export-height').value);
+            const scale = parseFloat(document.getElementById('export-scale').value);
+
+            Plotly.downloadImage('plot', {
+                format: format,
+                width: width,
+                height: height,
+                filename: 'forest_plot',
+                scale: scale
+            });
+        }
+
+        // Function to reset plot adjustments to defaults
+        function resetSettings() {
+            document.getElementById('font-size').value = 14;
+            document.getElementById('font-style').value = 'Arial';
+            document.getElementById('line-color').value = '#ff0000';
+            document.getElementById('effect-color').value = '#1f77b4';
+            document.getElementById('ci-color').value = '#666666';
+            document.getElementById('marker-size').value = 10;
+            document.getElementById('reference-value').value = 1;
+            document.getElementById('line-style').value = 'dashdot';
+            document.getElementById('line-width').value = 2;
+            document.getElementById('plot-title').value = 'Forest Plot';
+            document.getElementById('xaxis-title').value = 'Effect Size';
+            document.getElementById('yaxis-title').value = 'Study';
+            
+            // Update color previews
+            document.getElementById('line-color-preview').style.backgroundColor = '#ff0000';
+            document.getElementById('effect-color-preview').style.backgroundColor = '#1f77b4';
+            document.getElementById('ci-color-preview').style.backgroundColor = '#666666';
+            
+            if (currentPlot) {
+                applySettings();
+            }
+        }
+        
+        // Load example data
+        function loadExampleData() {
+            const exampleData = `Study A\t0.5\t0.3\t0.7
+Study B\t0.8\t0.6\t1.0
+Study C\t1.2\t0.9\t1.5
+Study D\t0.9\t0.7\t1.1
+Study E\t1.0\t0.8\t1.2
+Study F\t1.1\t0.9\t1.3
+Study G\t0.7\t0.5\t0.9`;
+            
+            document.getElementById('dataInput').value = exampleData;
+            parseData();
+            updatePlotInfo("Example data loaded. Click 'Generate Plot' to visualize.");
+        }
+        
+        // Clear all data
+        function clearData() {
+            document.getElementById('dataInput').value = '';
+            studyNames = [];
+            effectSizes = [];
+            ciLowers = [];
+            ciUppers = [];
+            
+            if (currentPlot) {
+                Plotly.purge('plot');
+                currentPlot = null;
+            }
+            
+            updatePlotInfo("Data cleared. Please input new data to generate a plot.");
+        }
+        
+        // Update the plot information section
+        function updatePlotInfo(message) {
+            document.getElementById('plot-info').innerHTML = `<p>${message}</p>`;
+        }
+        
+        // Initialize Bootstrap tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap tabs
+            const tabElms = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabElms.forEach(tabEl => {
+                tabEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const tab = new bootstrap.Tab(this);
+                    tab.show();
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
