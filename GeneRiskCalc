@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Hardy-Weinberg Equilibrium Calculator</title>
+    <style>
+        :root {
+            --primary: #103862;
+            --primary-dark: #103052;
+            --secondary: #05243f;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border: #dee2e6;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            margin: 0;
+            padding: 15px;
+            color: #212529;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--dark);
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--primary);
+            font-size: 20px;
+            margin-top: 0;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 280px;
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            color: var(--dark);
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .results-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .results {
+            flex: 1;
+            min-width: 280px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #f1f3f5;
+        }
+        
+        .results h3 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        
+        .results ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .results ul li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .results ul li:last-child {
+            border-bottom: none;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        table, th, td {
+            border: 1px solid var(--border);
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+        
+        tr:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        
+        .significance {
+            font-weight: bold;
+        }
+        
+        .significant {
+            color: var(--success);
+        }
+        
+        .not-significant {
+            color: var(--danger);
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-section {
+            background-color: #e7f5ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .info-section h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .model-explanation {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-container input {
+            margin-right: 10px;
+            width: auto;
+        }
+        
+        .options-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .p-value-display {
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .or-display {
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+            
+            .results {
+                min-width: 100%;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 6px;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 24px;
+            }
+            
+            h2 {
+                font-size: 20px;
+            }
+            
+            .input-group {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Advanced Hardy-Weinberg Equilibrium Calculator</h1>
+        
+        <div class="info-section">
+            <h3>About This Calculator</h3>
+            <p>The Genetic Risk Association Calculator (GeneRiskCalc) is a specialized tool designed to test Hardy-Weinberg Equilibrium (HWE) and perform genetic model analysis for case-control association studies.<p>
+
+<p>By inputting genotype counts for both case and control groups, researchers can assess genotype distribution and evaluate potential associations with specific traits or conditions, such as diseases or genetic disorders. This analysis helps in understanding genetic risk factors and their role in disease susceptibility.<p>
+
+<p>Developed jointly by the Institute of Human Genetics, University of Jammu, and the Department of Human Genetics, Sri Pratap College, GeneRiskCalc provides a user-friendly platform to enhance the accuracy and reliability of genetic association studies. It aims to support researchers in conducting robust genetic analyses, improving insights into the genetic basis of complex traits.</p>
+        </div>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <h2>Case Group</h2>
+                <label for="homozygous-wild">Homozygous Wild (HW):</label>
+                <input type="number" id="homozygous-wild" min="0" required>
+                
+                <label for="heterozygous">Heterozygous (HT):</label>
+                <input type="number" id="heterozygous" min="0" required>
+                
+                <label for="homozygous-recessive">Homozygous Recessive (HR):</label>
+                <input type="number" id="homozygous-recessive" min="0" required>
+            </div>
+
+            <div class="input-group">
+                <h2>Control Group</h2>
+                <label for="control-homozygous-wild">Homozygous Wild (HW):</label>
+                <input type="number" id="control-homozygous-wild" min="0" required>
+                
+                <label for="control-heterozygous">Heterozygous (HT):</label>
+                <input type="number" id="control-heterozygous" min="0" required>
+                
+                <label for="control-homozygous-recessive">Homozygous Recessive (HR):</label>
+                <input type="number" id="control-homozygous-recessive" min="0" required>
+            </div>
+        </div>
+        
+        <div class="options-section">
+            <h3>Analysis Options</h3>
+            <div class="checkbox-container">
+                <input type="checkbox" id="bonferroni-correction" checked>
+                <label for="bonferroni-correction">Apply Bonferroni correction for multiple testing (7 genetic models)</label>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="calculateHWE()">Calculate HWE & Genetic Models</button>
+            <button class="btn-secondary" onclick="resetForm()">Reset Form</button>
+        </div>
+        
+        <div id="loader" class="loader"></div>
+        
+        <div class="results-section">
+            <div id="case-results" class="results">
+                <!-- Case group results will be displayed here -->
+            </div>
+            <div id="control-results" class="results">
+                <!-- Control group results will be displayed here -->
+            </div>
+        </div>
+        
+        <div id="association-results" class="results" style="display: none;">
+            <!-- Association analysis results will be displayed here -->
+        </div>
+        
+        <div class="model-explanation">
+            <h3>Genetic Models Explained</h3>
+            <ul>
+                <li><strong>Recessive Model:</strong> HR vs (HT + HW) - Tests if having two recessive alleles increases risk</li>
+                <li><strong>Dominant Model:</strong> (HR + HT) vs HW - Tests if having at least one recessive allele increases risk</li>
+                <li><strong>Overdominant Model:</strong> HT vs (HR + HW) - Tests if heterozygotes have different risk</li>
+                <li><strong>Allelic Model:</strong> Compares allele frequencies between groups</li>
+                <li><strong>Codominant Models:</strong> Compare each genotype combination separately</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Show loading indicator
+        function showLoader() {
+            document.getElementById('loader').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 500);
+        }
+        
+        // Reset form
+        function resetForm() {
+            document.querySelectorAll('input').forEach(input => {
+                if (input.type !== 'checkbox') {
+                    input.value = '';
+                }
+            });
+            document.getElementById('case-results').innerHTML = '';
+            document.getElementById('control-results').innerHTML = '';
+            document.getElementById('association-results').style.display = 'none';
+            document.getElementById('association-results').innerHTML = '';
+        }
+        
+        // Validate inputs
+        function validateInputs() {
+            const inputs = [
+                'homozygous-wild', 'heterozygous', 'homozygous-recessive',
+                'control-homozygous-wild', 'control-heterozygous', 'control-homozygous-recessive'
+            ];
+            
+            for (const id of inputs) {
+                const input = document.getElementById(id);
+                const value = input.value.trim();
+                
+                if (value === '' || isNaN(value) || value < 0) {
+                    alert(`Please enter a valid non-negative number for ${input.previousElementSibling.textContent}`);
+                    input.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // Accurate standard normal cumulative distribution function
+        function normalCDF(z) {
+            const t = 1 / (1 + 0.2316419 * Math.abs(z));
+            const d = 0.3989423 * Math.exp(-z * z / 2);
+            let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            return z > 0 ? 1 - prob : prob;
+        }
+        
+        // Accurate chi-square p-value calculation
+        function chiSquaredPValue(x, df) {
+            if (df === 1) {
+                // For df=1, use normal approximation
+                return 2 * (1 - normalCDF(Math.sqrt(x)));
+            }
+            
+            // Simple approximation for our purposes
+            if (x < 0.1) return 1;
+            if (df === 1 && x > 6.63) return 0.01;
+            if (df === 1 && x > 3.84) return 0.05;
+            if (df === 1 && x > 2.71) return 0.10;
+            
+            return 0.20;
+        }
+        
+        // Calculate HWE statistics exactly as specified
+        function calculateHWEStats(observedHW, observedHT, observedHR) {
+            const total = observedHW + observedHT + observedHR;
+            if (total === 0) return { chiSquare: 0, pValue: 1, p: 0, q: 0 };
+
+            // Calculate allele frequencies exactly as specified
+            const p = (observedHW + (0.5 * observedHT)) / total;
+            const q = (observedHR + (0.5 * observedHT)) / total;
+
+            // Expected counts under HWE
+            const expectedHW = p * p * total;
+            const expectedHT = 2 * p * q * total;
+            const expectedHR = q * q * total;
+
+            // Chi-square calculation exactly as specified
+            let chiSquare = 0;
+            
+            if (expectedHW > 0) {
+                chiSquare += Math.pow(observedHW - expectedHW, 2) / expectedHW;
+            }
+            if (expectedHT > 0) {
+                chiSquare += Math.pow(observedHT - expectedHT, 2) / expectedHT;
+            }
+            if (expectedHR > 0) {
+                chiSquare += Math.pow(observedHR - expectedHR, 2) / expectedHR;
+            }
+
+            // Calculate p-value
+            const pValue = chiSquaredPValue(chiSquare, 1); // df=1 for HWE test
+
+            return {
+                chiSquare: chiSquare,
+                pValue: pValue,
+                p: p,
+                q: q,
+                expectedHW: expectedHW,
+                expectedHT: expectedHT,
+                expectedHR: expectedHR
+            };
+        }
+        
+        // Format p-value for display
+        function formatPValue(pValue) {
+            if (pValue < 0.0001) {
+                return pValue.toExponential(4);
+            } else {
+                return pValue.toFixed(4);
+            }
+        }
+        
+        // Format odds ratio for consistent display
+        function formatOddsRatio(or, lower, upper) {
+            const formattedOR = parseFloat(or).toFixed(2);
+            const formattedLower = parseFloat(lower).toFixed(2);
+            const formattedUpper = parseFloat(upper).toFixed(2);
+            
+            return `${formattedOR} (${formattedLower}-${formattedUpper})`;
+        }
+        
+        // Enhanced function to calculate odds ratio with 95% CI and p-value using Wald test
+        function calculateAssociation(a, b, c, d) {
+            // Add 0.5 to each cell if any cell has 0 to avoid division by zero
+            if (a === 0 || b === 0 || c === 0 || d === 0) {
+                a += 0.5;
+                b += 0.5;
+                c += 0.5;
+                d += 0.5;
+            }
+            
+            // Calculate odds ratio
+            const OR = (a * d) / (b * c);
+            
+            // Calculate standard error of log(OR)
+            const logOR = Math.log(OR);
+            const seLogOR = Math.sqrt(1/a + 1/b + 1/c + 1/d);
+            
+            // Calculate 95% confidence interval
+            const lower = Math.exp(logOR - 1.96 * seLogOR);
+            const upper = Math.exp(logOR + 1.96 * seLogOR);
+            
+            // Calculate z-score and p-value using Wald test
+            const zScore = logOR / seLogOR;
+            const pValue = 2 * (1 - normalCDF(Math.abs(zScore)));
+            
+            return {
+                or: OR,
+                lower: lower,
+                upper: upper,
+                zScore: zScore,
+                pValue: pValue,
+                logOR: logOR,
+                seLogOR: seLogOR,
+                formattedOR: formatOddsRatio(OR, lower, upper)
+            };
+        }
+        
+        // Main calculation function
+        function calculateHWE() {
+            if (!validateInputs()) return;
+            showLoader();
+            
+            // Get input values for case group
+            const HW = parseInt(document.getElementById('homozygous-wild').value) || 0;
+            const HT = parseInt(document.getElementById('heterozygous').value) || 0;
+            const HR = parseInt(document.getElementById('homozygous-recessive').value) || 0;
+            const N = HW + HT + HR;
+            
+            // Get input values for control group
+            const controlHW = parseInt(document.getElementById('control-homozygous-wild').value) || 0;
+            const controlHT = parseInt(document.getElementById('control-heterozygous').value) || 0;
+            const controlHR = parseInt(document.getElementById('control-homozygous-recessive').value) || 0;
+            const controlN = controlHW + controlHT + controlHR;
+            
+            // Check if we have at least some data
+            if (N === 0 || controlN === 0) {
+                alert("Please enter data for both case and control groups");
+                return;
+            }
+            
+            // Calculate HWE statistics for both groups
+            const caseStats = calculateHWEStats(HW, HT, HR);
+            const controlStats = calculateHWEStats(controlHW, controlHT, controlHR);
+            
+            // HWE determination
+            const isInHWE = caseStats.pValue > 0.05;
+            const controlIsInHWE = controlStats.pValue > 0.05;
+            
+            // Genetic models calculations
+            const recessiveModel = calculateAssociation(HR, HT+HW, controlHR, controlHT+controlHW);
+            const dominantModel = calculateAssociation(HR+HT, HW, controlHR+controlHT, controlHW);
+            const overdominantModel = calculateAssociation(HT, HR+HW, controlHT, controlHR+controlHW);
+            const allelicModel = calculateAssociation(2*HR+HT, 2*HW+HT, 2*controlHR+controlHT, 2*controlHW+controlHT);
+            
+            // Codominant models
+            const codominantHR_HW = calculateAssociation(HR, HW, controlHR, controlHW);
+            const codominantHR_HT = calculateAssociation(HR, HT, controlHR, controlHT);
+            const codominantHT_HW = calculateAssociation(HT, HW, controlHT, controlHW);
+            
+            // Check if Bonferroni correction is needed
+            const applyBonferroni = document.getElementById('bonferroni-correction').checked;
+            const bonferroniFactor = applyBonferroni ? 7 : 1; // 7 genetic models
+            
+            // Function to apply Bonferroni correction if needed
+            function getAdjustedPValue(pValue) {
+                if (!applyBonferroni) return pValue;
+                const adjusted = pValue * bonferroniFactor;
+                return adjusted > 1 ? 1 : adjusted;
+            }
+            
+            // Display results for case group
+            const caseResultsDiv = document.getElementById('case-results');
+            caseResultsDiv.innerHTML = `
+                <h3>Case Group Results (N = ${N})</h3>
+                <p><strong>Allele Frequencies:</strong> p = ${caseStats.p.toFixed(4)}, q = ${caseStats.q.toFixed(4)}</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Genotype</th>
+                            <th>Observed</th>
+                            <th>Expected</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HW</td>
+                            <td>${HW}</td>
+                            <td>${caseStats.expectedHW.toFixed(2)}</td>
+                            <td>${(HW/N*100).toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>HT</td>
+                            <td>${HT}</td>
+                            <td>${caseStats.expectedHT.toFixed(2)}</td>
+                            <td>${(HT/N*100).toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>HR</td>
+                            <td>${HR}</td>
+                            <td>${caseStats.expectedHR.toFixed(2)}</td>
+                            <td>${(HR/N*100).toFixed(2)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p><strong>HWE Test:</strong> χ² = ${caseStats.chiSquare.toFixed(4)}, p = ${formatPValue(caseStats.pValue)} 
+                <span class="significance ${isInHWE ? 'significant' : 'not-significant'}">
+                    (${isInHWE ? 'IN HWE' : 'NOT in HWE'})
+                </span></p>
+            `;
+            
+            // Display results for control group
+            const controlResultsDiv = document.getElementById('control-results');
+            controlResultsDiv.innerHTML = `
+                <h3>Control Group Results (N = ${controlN})</h3>
+                <p><strong>Allele Frequencies:</strong> p = ${controlStats.p.toFixed(4)}, q = ${controlStats.q.toFixed(4)}</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Genotype</th>
+                            <th>Observed</th>
+                            <th>Expected</th>
+                            <th>%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HW</td>
+                            <td>${controlHW}</td>
+                            <td>${controlStats.expectedHW.toFixed(2)}</td>
+                            <td>${(controlHW/controlN*100).toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>HT</td>
+                            <td>${controlHT}</td>
+                            <td>${controlStats.expectedHT.toFixed(2)}</td>
+                            <td>${(controlHT/controlN*100).toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>HR</td>
+                            <td>${controlHR}</td>
+                            <td>${controlStats.expectedHR.toFixed(2)}</td>
+                            <td>${(controlHR/controlN*100).toFixed(2)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p><strong>HWE Test:</strong> χ² = ${controlStats.chiSquare.toFixed(4)}, p = ${formatPValue(controlStats.pValue)} 
+                <span class="significance ${controlIsInHWE ? 'significant' : 'not-significant'}">
+                    (${controlIsInHWE ? 'IN HWE' : 'NOT in HWE'})
+                </span></p>
+            `;
+            
+            // Display association results
+            const associationResultsDiv = document.getElementById('association-results');
+            associationResultsDiv.style.display = 'block';
+            associationResultsDiv.innerHTML = `
+                <h3>Association Analysis Results</h3>
+                ${applyBonferroni ? '<p><strong>Note:</strong> Bonferroni correction applied (α = 0.05/7 = 0.00714)</p>' : ''}
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Genetic Model</th>
+                            <th>Comparison</th>
+                            <th>Odds Ratio (95% CI)</th>
+                            <th>Z-Score</th>
+                            <th>p-value</th>
+                            <th>${applyBonferroni ? 'Adj. ' : ''}Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Recessive</td>
+                            <td>HR vs (HT+HW)</td>
+                            <td class="or-display">${recessiveModel.formattedOR}</td>
+                            <td>${recessiveModel.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(recessiveModel.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(recessiveModel.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(recessiveModel.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(recessiveModel.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Dominant</td>
+                            <td>(HR+HT) vs HW</td>
+                            <td class="or-display">${dominantModel.formattedOR}</td>
+                            <td>${dominantModel.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(dominantModel.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(dominantModel.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(dominantModel.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(dominantModel.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Overdominant</td>
+                            <td>HT vs (HR+HW)</td>
+                            <td class="or-display">${overdominantModel.formattedOR}</td>
+                            <td>${overdominantModel.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(overdominantModel.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(overdominantModel.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(overdominantModel.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(overdominantModel.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Allelic</td>
+                            <td>R vs W alleles</td>
+                            <td class="or-display">${allelicModel.formattedOR}</td>
+                            <td>${allelicModel.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(allelicModel.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(allelicModel.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(allelicModel.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(allelicModel.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Codominant (HR vs HW)</td>
+                            <td>HR vs HW</td>
+                            <td class="or-display">${codominantHR_HW.formattedOR}</td>
+                            <td>${codominantHR_HW.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(codominantHR_HW.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(codominantHR_HW.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(codominantHR_HW.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(codominantHR_HW.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Codominant (HR vs HT)</td>
+                            <td>HR vs HT</td>
+                            <td class="or-display">${codominantHR_HT.formattedOR}</td>
+                            <td>${codominantHR_HT.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(codominantHR_HT.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(codominantHR_HT.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(codominantHR_HT.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(codominantHR_HT.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Codominant (HT vs HW)</td>
+                            <td>HT vs HW</td>
+                            <td class="or-display">${codominantHT_HW.formattedOR}</td>
+                            <td>${codominantHT_HW.zScore.toFixed(4)}</td>
+                            <td class="p-value-display">${formatPValue(codominantHT_HW.pValue)}${applyBonferroni ? `<br>${formatPValue(getAdjustedPValue(codominantHT_HW.pValue))}` : ''}</td>
+                            <td class="${getAdjustedPValue(codominantHT_HW.pValue) < 0.05 ? 'significant' : 'not-significant'}">
+                                ${getAdjustedPValue(codominantHT_HW.pValue) < 0.05 ? 'SIGNIFICANT' : 'Not significant'}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="model-explanation" style="margin-top: 20px;">
+                    <p><strong>Statistical Interpretation Guide:</strong></p>
+                    <ul>
+                        <li><strong>Odds Ratio (OR):</strong> Represents the odds of disease in exposed vs unexposed</li>
+                        <li><strong>95% CI:</strong> If includes 1.0, result is not significant at p<0.05</li>
+                        <li><strong>p-value:</strong> Probability of observing this result by chance alone</li>
+                        <li><strong>Significance:</strong> p < 0.05 is typically considered statistically significant</li>
+                    </ul>
+                </div>
+            `;
+            
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('case-results').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+    </script>
+</body>
+
+</html>
