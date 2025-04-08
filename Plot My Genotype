@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genotype and Allele Analysis Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --success-color: #28a745;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fffff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+        
+        .step {
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            font-size: 14px;
+        }
+        
+        input[type="number"], input[type="color"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #f8fafc;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a5a8f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 25px 0;
+            height: 400px;
+            gap: 20px;
+        }
+        
+        .chart {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: 100% !important;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid var(--success-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            border: 1px solid #e1e5eb;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+        }
+        
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 15px;
+        }
+        
+        .customization-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .customization-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .customization-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+        
+        .value-display-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .option-label {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2> 🧬 Genotype and Allele Frequency Plotter 📊 </h2>
+        
+        <div class="step">
+            <h3><i class="fas fa-info-circle"></i> Introduction</h3>
+            <p>The Genotype and Allele Frequency Plotter is an interactive web tool for genetic analysis, allowing users to input case/control genotype counts (HW, HT, HR) and visualize frequencies via dynamic bar charts. It calculates genotype/allele percentages (W, R), offers customization (colors, on-bar value labels, font sizing), and exports charts (JPEG) or results (PDF).<p> 
+<p> Designed for researchers and educators, it simplifies genetic frequency comparisons with real-time updates and a mobile-friendly interface. 🧬📊 
+</p>
+            <button onclick="addExampleData()">
+                <i class="fas fa-vial"></i> Load Example Data
+            </button>
+            <button onclick="resetData()">
+                <i class="fas fa-undo"></i> Reset Data
+            </button>
+        </div>
+
+        <div class="step">
+            <h3><i class="fas fa-table"></i> Step I: Data Input</h3>
+            <div class="input-section">
+                <div>
+                    <h4><i class="fas fa-user-md"></i> Case Group</h4>
+                    <label for="case-hw">HW (Homozygous Wild):</label>
+                    <input type="number" id="case-hw" value="0" min="0">
+                    <label for="case-ht">HT (Heterozygous):</label>
+                    <input type="number" id="case-ht" value="0" min="0">
+                    <label for="case-hr">HR (Homozygous Recessive):</label>
+                    <input type="number" id="case-hr" value="0" min="0">
+                </div>
+                <div>
+                    <h4><i class="fas fa-user-shield"></i> Control Group</h4>
+                    <label for="control-hw">HW (Homozygous Wild):</label>
+                    <input type="number" id="control-hw" value="0" min="0">
+                    <label for="control-ht">HT (Heterozygous):</label>
+                    <input type="number" id="control-ht" value="0" min="0">
+                    <label for="control-hr">HR (Homozygous Recessive):</label>
+                    <input type="number" id="control-hr" value="0" min="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3><i class="fas fa-chart-bar"></i> Step II: Visualization</h3>
+            <div class="customization-section">
+                <div class="customization-card">
+                    <h4><i class="fas fa-paint-brush"></i> Chart Colors</h4>
+                    <label for="caseColor">Case Color:</label>
+                    <input type="color" id="caseColor" value="#4a6fa5">
+                    <label for="controlColor">Control Color:</label>
+                    <input type="color" id="controlColor" value="#ff7e5f">
+                </div>
+                <div class="customization-card">
+                    <h4><i class="fas fa-chart-line"></i> Value Display Options</h4>
+                    <div class="value-display-options">
+                        <div class="option-row">
+                            <span class="option-label">Show Values on Bars:</span>
+                            <select id="showValues">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="option-row">
+                            <span class="option-label">Value Font Size:</span>
+                            <select id="valueFontSize">
+                                <option value="12">Small</option>
+                                <option value="14" selected>Medium</option>
+                                <option value="16">Large</option>
+                            </select>
+                        </div>
+                        <div class="option-row">
+                            <span class="option-label">Value Color:</span>
+                            <input type="color" id="valueColor" value="#333333">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="calculateAndPlot()">
+                <i class="fas fa-sync-alt"></i> Update Graph
+            </button>
+            
+            <div class="chart-container">
+                <div class="chart">
+                    <h4 class="chart-title"><i class="fas fa-dna"></i> Genotype Frequencies</h4>
+                    <canvas id="genotypeChart"></canvas>
+                </div>
+                <div class="chart">
+                    <h4 class="chart-title"><i class="fas fa-code-branch"></i> Allele Frequencies</h4>
+                    <canvas id="alleleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3><i class="fas fa-clipboard-list"></i> Step III: Analysis Results</h3>
+            <div class="results">
+                <h4><i class="fas fa-chart-pie"></i> Frequency Distribution</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Group</th>
+                            <th>HW (%)</th>
+                            <th>HT (%)</th>
+                            <th>HR (%)</th>
+                            <th>W (%)</th>
+                            <th>R (%)</th>
+                            <th>Total Individuals</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Case Group</td>
+                            <td id="case-hw-result">0</td>
+                            <td id="case-ht-result">0</td>
+                            <td id="case-hr-result">0</td>
+                            <td id="case-w-result">0</td>
+                            <td id="case-r-result">0</td>
+                            <td id="case-total-result">0</td>
+                        </tr>
+                        <tr>
+                            <td>Control Group</td>
+                            <td id="control-hw-result">0</td>
+                            <td id="control-ht-result">0</td>
+                            <td id="control-hr-result">0</td>
+                            <td id="control-w-result">0</td>
+                            <td id="control-r-result">0</td>
+                            <td id="control-total-result">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="download-buttons">
+            <button onclick="downloadCharts()">
+                <i class="fas fa-download"></i> Download Graph
+            </button>
+            <button onclick="downloadResults()">
+                <i class="fas fa-file-alt"></i> Download Results
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let genotypeChart, alleleChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateAndPlot();
+        });
+
+        function addExampleData() {
+            // Example data for case and control groups
+            document.getElementById('case-hw').value = 40;
+            document.getElementById('case-ht').value = 50;
+            document.getElementById('case-hr').value = 10;
+
+            document.getElementById('control-hw').value = 70;
+            document.getElementById('control-ht').value = 20;
+            document.getElementById('control-hr').value = 10;
+
+            // Recalculate and plot with example data
+            calculateAndPlot();
+        }
+
+        function resetData() {
+            // Reset input fields to default values
+            document.getElementById('case-hw').value = 0;
+            document.getElementById('case-ht').value = 0;
+            document.getElementById('case-hr').value = 0;
+
+            document.getElementById('control-hw').value = 0;
+            document.getElementById('control-ht').value = 0;
+            document.getElementById('control-hr').value = 0;
+
+            // Reset chart colors
+            document.getElementById('caseColor').value = '#4a6fa5';
+            document.getElementById('controlColor').value = '#ff7e5f';
+
+            // Reset display options
+            document.getElementById('showValues').value = 'true';
+            document.getElementById('valueFontSize').value = '14';
+            document.getElementById('valueColor').value = '#333333';
+
+            // Clear results and charts
+            document.getElementById('case-hw-result').innerText = '0';
+            document.getElementById('case-ht-result').innerText = '0';
+            document.getElementById('case-hr-result').innerText = '0';
+            document.getElementById('case-w-result').innerText = '0';
+            document.getElementById('case-r-result').innerText = '0';
+            document.getElementById('case-total-result').innerText = '0';
+            document.getElementById('control-hw-result').innerText = '0';
+            document.getElementById('control-ht-result').innerText = '0';
+            document.getElementById('control-hr-result').innerText = '0';
+            document.getElementById('control-w-result').innerText = '0';
+            document.getElementById('control-r-result').innerText = '0';
+            document.getElementById('control-total-result').innerText = '0';
+
+            // Recalculate and plot with default values
+            calculateAndPlot();
+        }
+
+        function calculateAndPlot() {
+            const caseHW = parseInt(document.getElementById('case-hw').value) || 0;
+            const caseHT = parseInt(document.getElementById('case-ht').value) || 0;
+            const caseHR = parseInt(document.getElementById('case-hr').value) || 0;
+            const caseTotal = caseHW + caseHT + caseHR;
+
+            const controlHW = parseInt(document.getElementById('control-hw').value) || 0;
+            const controlHT = parseInt(document.getElementById('control-ht').value) || 0;
+            const controlHR = parseInt(document.getElementById('control-hr').value) || 0;
+            const controlTotal = controlHW + controlHT + controlHR;
+
+            if (caseTotal === 0 || controlTotal === 0) {
+                alert('Both groups must have at least some individuals');
+                return;
+            }
+
+            const caseGenotypeFreqs = {
+                HW: (caseHW / caseTotal * 100).toFixed(1),
+                HT: (caseHT / caseTotal * 100).toFixed(1),
+                HR: (caseHR / caseTotal * 100).toFixed(1),
+                W: ((2 * caseHW + caseHT) / (2 * caseTotal) * 100).toFixed(1),
+                R: ((2 * caseHR + caseHT) / (2 * caseTotal) * 100).toFixed(1)
+            };
+
+            const controlGenotypeFreqs = {
+                HW: (controlHW / controlTotal * 100).toFixed(1),
+                HT: (controlHT / controlTotal * 100).toFixed(1),
+                HR: (controlHR / controlTotal * 100).toFixed(1),
+                W: ((2 * controlHW + controlHT) / (2 * controlTotal) * 100).toFixed(1),
+                R: ((2 * controlHR + controlHT) / (2 * controlTotal) * 100).toFixed(1)
+            };
+
+            // Update results in the table
+            document.getElementById('case-hw-result').innerText = caseGenotypeFreqs.HW;
+            document.getElementById('case-ht-result').innerText = caseGenotypeFreqs.HT;
+            document.getElementById('case-hr-result').innerText = caseGenotypeFreqs.HR;
+            document.getElementById('case-w-result').innerText = caseGenotypeFreqs.W;
+            document.getElementById('case-r-result').innerText = caseGenotypeFreqs.R;
+            document.getElementById('case-total-result').innerText = caseTotal;
+
+            document.getElementById('control-hw-result').innerText = controlGenotypeFreqs.HW;
+            document.getElementById('control-ht-result').innerText = controlGenotypeFreqs.HT;
+            document.getElementById('control-hr-result').innerText = controlGenotypeFreqs.HR;
+            document.getElementById('control-w-result').innerText = controlGenotypeFreqs.W;
+            document.getElementById('control-r-result').innerText = controlGenotypeFreqs.R;
+            document.getElementById('control-total-result').innerText = controlTotal;
+
+            updateGenotypeChart(caseGenotypeFreqs, controlGenotypeFreqs);
+            updateAlleleChart(caseGenotypeFreqs, controlGenotypeFreqs);
+        }
+
+        function updateGenotypeChart(caseFreqs, controlFreqs) {
+            const ctx = document.getElementById('genotypeChart').getContext('2d');
+            const caseColor = document.getElementById('caseColor').value;
+            const controlColor = document.getElementById('controlColor').value;
+            const showValues = document.getElementById('showValues').value === 'true';
+            const valueFontSize = parseInt(document.getElementById('valueFontSize').value);
+            const valueColor = document.getElementById('valueColor').value;
+
+            if (genotypeChart) genotypeChart.destroy();
+
+            genotypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['HW', 'HT', 'HR'],
+                    datasets: [
+                        {
+                            label: 'Case Group',
+                            data: [caseFreqs.HW, caseFreqs.HT, caseFreqs.HR],
+                            backgroundColor: hexToRgba(caseColor, 0.7),
+                            borderColor: caseColor,
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Control Group',
+                            data: [controlFreqs.HW, controlFreqs.HT, controlFreqs.HR],
+                            backgroundColor: hexToRgba(controlColor, 0.7),
+                            borderColor: controlColor,
+                            borderWidth: 1,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: false, // We're using our own title
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        datalabels: {
+                            display: false // We'll use our own data labels
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                display: false // Disable gridlines
+                            },
+                            ticks: {
+                                display: showValues ? false : true // Hide y-axis if values are shown on bars
+                            },
+                            title: {
+                                display: showValues ? false : true, // Hide title if values are shown on bars
+                                text: 'Frequency (%)',
+                                color: '#333',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false // Disable gridlines
+                            },
+                            title: {
+                                display: true,
+                                text: 'Genotype',
+                                color: '#333',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        bar: {
+                            borderRadius: 4
+                        }
+                    },
+                    animation: {
+                        onComplete: function() {
+                            if (showValues) {
+                                addDataLabels(this, valueFontSize, valueColor);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAlleleChart(caseFreqs, controlFreqs) {
+            const ctx = document.getElementById('alleleChart').getContext('2d');
+            const caseColor = document.getElementById('caseColor').value;
+            const controlColor = document.getElementById('controlColor').value;
+            const showValues = document.getElementById('showValues').value === 'true';
+            const valueFontSize = parseInt(document.getElementById('valueFontSize').value);
+            const valueColor = document.getElementById('valueColor').value;
+
+            if (alleleChart) alleleChart.destroy();
+
+            alleleChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['W', 'R'],
+                    datasets: [
+                        {
+                            label: 'Case Group',
+                            data: [caseFreqs.W, caseFreqs.R],
+                            backgroundColor: hexToRgba(caseColor, 0.7),
+                            borderColor: caseColor,
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Control Group',
+                            data: [controlFreqs.W, controlFreqs.R],
+                            backgroundColor: hexToRgba(controlColor, 0.7),
+                            borderColor: controlColor,
+                            borderWidth: 1,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: false, // We're using our own title
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        datalabels: {
+                            display: false // We'll use our own data labels
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                display: false // Disable gridlines
+                            },
+                            ticks: {
+                                display: showValues ? false : true // Hide y-axis if values are shown on bars
+                            },
+                            title: {
+                                display: showValues ? false : true, // Hide title if values are shown on bars
+                                text: 'Frequency (%)',
+                                color: '#333',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false // Disable gridlines
+                            },
+                            title: {
+                                display: true,
+                                text: 'Allele',
+                                color: '#333',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        bar: {
+                            borderRadius: 4
+                        }
+                    },
+                    animation: {
+                        onComplete: function() {
+                            if (showValues) {
+                                addDataLabels(this, valueFontSize, valueColor);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function addDataLabels(chart, fontSize, color) {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const data = dataset.data[index];
+                    const xPos = bar.x;
+                    const yPos = bar.y - 10; // Position above the bar
+                    
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = color;
+                    ctx.fillText(data + '%', xPos, yPos);
+                });
+            });
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function downloadCharts() {
+            const canvas1 = document.getElementById('genotypeChart');
+            const canvas2 = document.getElementById('alleleChart');
+            const combinedCanvas = document.createElement('canvas');
+            const ctx = combinedCanvas.getContext('2d');
+
+            combinedCanvas.width = canvas1.width + canvas2.width;
+            combinedCanvas.height = Math.max(canvas1.height, canvas2.height);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+            ctx.drawImage(canvas1, 0, 0);
+            ctx.drawImage(canvas2, canvas1.width, 0);
+
+            const link = document.createElement('a');
+            link.href = combinedCanvas.toDataURL('image/jpeg', 1.0);
+            link.download = 'genotype_allele_charts.jpeg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadResults() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(74, 111, 165);
+            doc.text('Genotype and Allele Analysis Results', 105, 15, null, null, 'center');
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, null, null, 'center');
+            
+            // Add case group data
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Case Group Data:', 20, 35);
+            doc.setFontSize(12);
+            doc.text(`HW (Homozygous Wild): ${document.getElementById('case-hw').value}`, 20, 45);
+            doc.text(`HT (Heterozygous): ${document.getElementById('case-ht').value}`, 20, 55);
+            doc.text(`HR (Homozygous Recessive): ${document.getElementById('case-hr').value}`, 20, 65);
+            doc.text(`W (Wild Allele): ${document.getElementById('case-w-result').innerText}`, 20, 75);
+            doc.text(`R (Recessive Allele): ${document.getElementById('case-r-result').innerText}`, 20, 85);
+            
+            // Add control group data
+            doc.setFontSize(14);
+            doc.text('Control Group Data:', 20, 100);
+            doc.setFontSize(12);
+            doc.text(`HW (Homozygous Wild): ${document.getElementById('control-hw').value}`, 20, 110);
+            doc.text(`HT (Heterozygous): ${document.getElementById('control-ht').value}`, 20, 120);
+            doc.text(`HR (Homozygous Recessive): ${document.getElementById('control-hr').value}`, 20, 130);
+            doc.text(`W (Wild Allele): ${document.getElementById('control-w-result').innerText}`, 20, 140);
+            doc.text(`R (Recessive Allele): ${document.getElementById('control-r-result').innerText}`, 20, 150);
+            
+            // Add analysis results
+            doc.setFontSize(14);
+            doc.text('Analysis Results:', 20, 165);
+            const results = `
+                Case Group: HW: ${document.getElementById('case-hw-result').innerText}%, HT: ${document.getElementById('case-ht-result').innerText}%, HR: ${document.getElementById('case-hr-result').innerText}%
+                Control Group: HW: ${document.getElementById('control-hw-result').innerText}%, HT: ${document.getElementById('control-ht-result').innerText}%, HR: ${document.getElementById('control-hr-result').innerText}%
+            `;
+            const splitText = doc.splitTextToSize(results, 180);
+            doc.setFontSize(10);
+            doc.text(splitText, 20, 175);
+            
+            // Save the PDF
+            doc.save('genotype_analysis_results.pdf');
+        }
+    </script>
+</body>
+</html>
